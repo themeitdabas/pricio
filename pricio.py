@@ -4,6 +4,20 @@ import numpy as np
 from sklearn.linear_model import LinearRegression
 import matplotlib.pyplot as plt
 
+st.set_page_config(
+    page_title="Pricio",
+    page_icon="💰",
+    layout="wide"
+)
+
+st.markdown("""
+<style>
+.block-container {
+    padding-top: 2rem;
+}
+</style>
+""", unsafe_allow_html=True)
+
 st.markdown(
     "<h1 style='text-align: center;'>PRICIO – AI Pricing Intelligence</h1>",
     unsafe_allow_html=True
@@ -12,6 +26,7 @@ st.markdown(
     "<h3 style='text-align: center;'>AI Pricing Intelligence</h3>",
     unsafe_allow_html=True
 )
+
 
 st.markdown(
     """
@@ -24,7 +39,7 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
-
+<br>
 st.markdown("""
 To analyse pricing, Pricio needs **historical sales data**.
 
@@ -242,6 +257,7 @@ else:
     ax2.set_ylabel("Profit")
 
     st.pyplot(fig2)
+
 
 
 
