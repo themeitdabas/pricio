@@ -1,16 +1,16 @@
+import streamlit as st
 import pandas as pd
 import numpy as np
 from sklearn.linear_model import LinearRegression
 import matplotlib.pyplot as plt
 
-print("\n------ PRICIO PRICING ANALYSIS ------\n")
+st.title("PRICIO – AI Pricing Intelligence")
 
-# ----------------------------
-# Load data
-# ----------------------------
+uploaded_file = st.file_uploader("Upload your sales CSV", type=["csv"])
 
-data = pd.read_csv("sales_data.csv")
+if uploaded_file is not None:
 
+    data = pd.read_csv(uploaded_file)
 price = data["price"].values.reshape(-1,1)
 sales = data["units_sold"].values
 cost = data["cost_per_unit"].iloc[0]
@@ -193,3 +193,4 @@ plt.xlabel("Price")
 plt.ylabel("Profit")
 
 plt.show()
+
