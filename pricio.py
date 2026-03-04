@@ -13,6 +13,18 @@ st.markdown(
     unsafe_allow_html=True
 )
 
+st.markdown(
+    """
+    <p style='text-align: center; font-size:18px; max-width:700px; margin:auto;'>
+    <b>Pricio</b> is an AI-powered pricing intelligence tool that helps businesses
+    determine the optimal price for their products. By analysing historical sales
+    data, Pricio estimates demand elasticity, evaluates pricing sensitivity,
+    and identifies the price range that maximises profit.
+    </p>
+    """,
+    unsafe_allow_html=True
+)
+
 st.markdown("""
 To analyse pricing, Pricio needs **historical sales data**.
 
@@ -230,5 +242,6 @@ else:
     ax2.set_ylabel("Profit")
 
     st.pyplot(fig2)
+
 
 
