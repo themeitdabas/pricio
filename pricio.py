@@ -6,191 +6,194 @@ import matplotlib.pyplot as plt
 
 st.title("PRICIO – AI Pricing Intelligence")
 
+st.write("Upload your weekly sales data to analyse optimal pricing.")
+
 uploaded_file = st.file_uploader("Upload your sales CSV", type=["csv"])
 
-if uploaded_file is not None:
+if uploaded_file is None:
+
+    st.info("Please upload a CSV file to begin analysis.")
+
+else:
 
     data = pd.read_csv(uploaded_file)
-price = data["price"].values.reshape(-1,1)
-sales = data["units_sold"].values
-cost = data["cost_per_unit"].iloc[0]
 
-weeks = len(data)
+    # ----------------------------
+    # Load data
+    # ----------------------------
 
-# ----------------------------
-# Remove Outliers
-# ----------------------------
+    price = data["price"].values.reshape(-1,1)
+    sales = data["units_sold"].values
+    cost = data["cost_per_unit"].iloc[0]
 
-mean_sales = np.mean(sales)
-std_sales = np.std(sales)
+    weeks = len(data)
 
-mask = (sales > mean_sales - 3*std_sales) & (sales < mean_sales + 3*std_sales)
+    # ----------------------------
+    # Remove Outliers
+    # ----------------------------
 
-price = price[mask]
-sales = sales[mask]
+    mean_sales = np.mean(sales)
+    std_sales = np.std(sales)
 
-# ----------------------------
-# Smooth Sales
-# ----------------------------
+    mask = (sales > mean_sales - 3*std_sales) & (sales < mean_sales + 3*std_sales)
 
-sales_smoothed = pd.Series(sales).rolling(window=3).mean().dropna()
-price_smoothed = price[len(price)-len(sales_smoothed):]
+    price = price[mask]
+    sales = sales[mask]
 
-# ----------------------------
-# Train Demand Model
-# ----------------------------
+    # ----------------------------
+    # Smooth Sales
+    # ----------------------------
 
-model = LinearRegression()
-model.fit(price_smoothed, sales_smoothed)
+    sales_smoothed = pd.Series(sales).rolling(window=3).mean().dropna()
+    price_smoothed = price[len(price)-len(sales_smoothed):]
 
-predicted_sales_training = model.predict(price_smoothed)
+    # ----------------------------
+    # Train Demand Model
+    # ----------------------------
 
-# ----------------------------
-# Calculate R² (model reliability)
-# ----------------------------
+    model = LinearRegression()
+    model.fit(price_smoothed, sales_smoothed)
 
-ss_res = np.sum((sales_smoothed - predicted_sales_training)**2)
-ss_tot = np.sum((sales_smoothed - np.mean(sales_smoothed))**2)
+    predicted_sales_training = model.predict(price_smoothed)
 
-r2 = 1 - (ss_res/ss_tot)
+    # ----------------------------
+    # Model Reliability (R²)
+    # ----------------------------
 
-# ----------------------------
-# Elasticity
-# ----------------------------
+    ss_res = np.sum((sales_smoothed - predicted_sales_training)**2)
+    ss_tot = np.sum((sales_smoothed - np.mean(sales_smoothed))**2)
 
-slope = model.coef_[0]
+    r2 = 1 - (ss_res/ss_tot)
 
-avg_price = np.mean(price_smoothed)
-avg_sales = np.mean(sales_smoothed)
+    # ----------------------------
+    # Elasticity
+    # ----------------------------
 
-elasticity = slope * (avg_price / avg_sales)
+    slope = model.coef_[0]
 
-# ----------------------------
-# Elasticity interpretation
-# ----------------------------
+    avg_price = np.mean(price_smoothed)
+    avg_sales = np.mean(sales_smoothed)
 
-if elasticity < -1:
-    sensitivity = "High"
-elif elasticity < -0.5:
-    sensitivity = "Moderate"
-else:
-    sensitivity = "Low"
+    elasticity = slope * (avg_price / avg_sales)
 
-# ----------------------------
-# Model confidence
-# ----------------------------
+    if elasticity < -1:
+        sensitivity = "High"
+    elif elasticity < -0.5:
+        sensitivity = "Moderate"
+    else:
+        sensitivity = "Low"
 
-if r2 > 0.6:
-    confidence = "High"
-elif r2 > 0.3:
-    confidence = "Medium"
-else:
-    confidence = "Low"
+    # ----------------------------
+    # Model Confidence
+    # ----------------------------
 
-# ----------------------------
-# Generate price candidates
-# ----------------------------
+    if r2 > 0.6:
+        confidence = "High"
+    elif r2 > 0.3:
+        confidence = "Medium"
+    else:
+        confidence = "Low"
 
-step = 5
+    # ----------------------------
+    # Generate Price Candidates
+    # ----------------------------
 
-price_range = np.arange(avg_price*0.8, avg_price*1.2, step)
+    step = 5
 
-profits = []
-predicted_sales_list = []
+    price_range = np.arange(avg_price*0.8, avg_price*1.2, step)
 
-for p in price_range:
+    profits = []
+    predicted_sales_list = []
 
-    predicted_sales = model.predict([[p]])[0]
+    for p in price_range:
 
-    predicted_sales_list.append(predicted_sales)
+        predicted_sales = model.predict([[p]])[0]
 
-    profit = (p - cost) * predicted_sales
+        predicted_sales_list.append(predicted_sales)
 
-    profits.append(profit)
+        profit = (p - cost) * predicted_sales
 
-# ----------------------------
-# Find optimal price zone
-# ----------------------------
+        profits.append(profit)
 
-max_profit = max(profits)
+    # ----------------------------
+    # Find Optimal Price Zone
+    # ----------------------------
 
-best_prices = [p for p,profit in zip(price_range,profits) if profit >= 0.97*max_profit]
+    max_profit = max(profits)
 
-min_price = round(min(best_prices))
-max_price = round(max(best_prices))
+    best_prices = [p for p,profit in zip(price_range,profits) if profit >= 0.97*max_profit]
 
-# ----------------------------
-# Current price analysis
-# ----------------------------
+    min_price = round(min(best_prices))
+    max_price = round(max(best_prices))
 
-current_price = round(avg_price)
+    # ----------------------------
+    # Current Price Analysis
+    # ----------------------------
 
-current_sales = model.predict([[current_price]])[0]
+    current_price = round(avg_price)
 
-current_profit = (current_price - cost) * current_sales
+    current_sales = model.predict([[current_price]])[0]
 
-profit_gain = ((max_profit - current_profit)/current_profit)*100
+    current_profit = (current_price - cost) * current_sales
 
-# ----------------------------
-# Diagnosis
-# ----------------------------
+    profit_gain = ((max_profit - current_profit)/current_profit)*100
 
-if current_price < min_price:
-    diagnosis = "Underpriced"
-elif current_price > max_price:
-    diagnosis = "Potential Overpricing"
-else:
-    diagnosis = "Near Optimal"
+    # ----------------------------
+    # Diagnosis
+    # ----------------------------
 
-# ----------------------------
-# Results
-# ----------------------------
+    if current_price < min_price:
+        diagnosis = "Underpriced"
+    elif current_price > max_price:
+        diagnosis = "Potential Overpricing"
+    else:
+        diagnosis = "Near Optimal"
 
-print("Data analysed:", weeks, "weeks\n")
+    # ----------------------------
+    # Results
+    # ----------------------------
 
-print("Price Sensitivity:", sensitivity)
-print("Model Confidence:", confidence)
-print("Elasticity:", round(elasticity,2), "\n")
+    st.subheader("Pricing Diagnosis")
 
-print("Current Price:", current_price)
+    st.write("Weeks Analysed:", weeks)
 
-print("Recommended Price Range:", min_price, "-", max_price)
+    st.write("Price Sensitivity:", sensitivity)
+    st.write("Model Confidence:", confidence)
+    st.write("Elasticity:", round(elasticity,2))
 
-print("Diagnosis:", diagnosis)
+    st.write("Current Price:", current_price)
 
-print("Estimated Profit Improvement:", round(abs(profit_gain)), "%")
+    st.write("Recommended Price Range:", f"{min_price} - {max_price}")
 
-# ----------------------------
-# Demand Curve
-# ----------------------------
+    st.write("Diagnosis:", diagnosis)
 
-plt.figure()
+    st.write("Estimated Profit Improvement:", f"{round(abs(profit_gain))}%")
 
-plt.scatter(price_smoothed, sales_smoothed)
+    # ----------------------------
+    # Demand Curve
+    # ----------------------------
 
-plt.plot(price_range, predicted_sales_list)
+    fig1, ax1 = plt.subplots()
 
-plt.title("Demand Curve")
+    ax1.scatter(price_smoothed, sales_smoothed)
+    ax1.plot(price_range, predicted_sales_list)
 
-plt.xlabel("Price")
+    ax1.set_title("Demand Curve")
+    ax1.set_xlabel("Price")
+    ax1.set_ylabel("Units Sold")
 
-plt.ylabel("Units Sold")
+    st.pyplot(fig1)
 
-plt.show()
+    # ----------------------------
+    # Profit Curve
+    # ----------------------------
 
-# ----------------------------
-# Profit Curve
-# ----------------------------
+    fig2, ax2 = plt.subplots()
 
-plt.figure()
+    ax2.plot(price_range, profits)
 
-plt.plot(price_range, profits)
+    ax2.set_title("Profit vs Price")
+    ax2.set_xlabel("Price")
+    ax2.set_ylabel("Profit")
 
-plt.title("Profit vs Price")
-
-plt.xlabel("Price")
-
-plt.ylabel("Profit")
-
-plt.show()
-
+    st.pyplot(fig2)
