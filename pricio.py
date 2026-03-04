@@ -39,6 +39,23 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
+st.sidebar.title("About Pricio")
+
+st.sidebar.markdown("""
+Pricio analyses historical pricing data to estimate demand behaviour
+and recommend optimal pricing strategies.
+""")
+
+st.sidebar.header("CSV Requirements")
+
+st.sidebar.markdown("""
+Required columns:
+
+- `price`
+- `units_sold`
+- `cost_per_unit`
+""")
 st.divider()
 st.markdown("""
 To analyse pricing, Pricio needs **historical sales data**.
@@ -257,6 +274,7 @@ else:
     ax2.set_ylabel("Profit")
 
     st.pyplot(fig2)
+
 
 
 
