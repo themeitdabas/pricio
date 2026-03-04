@@ -39,7 +39,7 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
-<br>
+st.divider()
 st.markdown("""
 To analyse pricing, Pricio needs **historical sales data**.
 
@@ -257,6 +257,7 @@ else:
     ax2.set_ylabel("Profit")
 
     st.pyplot(fig2)
+
 
 
 
