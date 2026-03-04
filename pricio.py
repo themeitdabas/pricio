@@ -4,9 +4,36 @@ import numpy as np
 from sklearn.linear_model import LinearRegression
 import matplotlib.pyplot as plt
 
-st.title("PRICIO – AI Pricing Intelligence")
+st.title("PRICIO")
+st.header("AI Pricing Intelligence")
 
-st.write("Upload your weekly sales data to analyse optimal pricing.")
+st.markdown("""
+To analyse pricing, Pricio needs **historical sales data**.
+
+Your CSV file must contain the following columns:
+
+• **price** – the selling price of the product  
+• **units_sold** – number of units sold at that price  
+• **cost_per_unit** – cost to produce one unit
+
+Each row should represent **one time period (for example, one week)**.
+""")
+
+st.subheader("Required CSV Format")
+
+example_data = pd.DataFrame({
+    "price": [100, 105, 110, 115, 120],
+    "units_sold": [250, 240, 230, 220, 210],
+    "cost_per_unit": [60, 60, 60, 60, 60]
+})
+
+st.table(example_data)
+
+st.markdown("""
+**Column names must match exactly:**
+
+`price`, `units_sold`, `cost_per_unit`
+""")
 
 uploaded_file = st.file_uploader("Upload your sales CSV", type=["csv"])
 
@@ -197,3 +224,4 @@ else:
     ax2.set_ylabel("Profit")
 
     st.pyplot(fig2)
+
